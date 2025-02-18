@@ -41,6 +41,11 @@
       img {
         width: 100%;
         display: block;
+        transition: filter 500ms;
+
+        &.has-shadow:hover {
+          filter: drop-shadow(0 0 90px var(--col));
+        }
       }
 
       h2 {
@@ -64,14 +69,6 @@
         & > * {
           max-width: 150px;
           min-width: 100px;
-          transition: filter 500ms;
-
-          &:nth-child(1):hover {
-            filter: drop-shadow(0 0 90px #8ac74e);
-          }
-          &:nth-child(2):hover {
-            filter: drop-shadow(0 0 90px #fcc723);
-          }
         }
       }
 
@@ -97,21 +94,34 @@
     </style>
   </head>
   <body>
-    <img
-      class="fastify-img"
-      src="./fastify.svg"
-      alt="fastify"
-      loading="eager"
-      fetchpriority="high"
-    />
+    <a href="https://fastify.dev/" target="_blank">
+      <img
+        class="fastify-img has-shadow"
+        style="--col: #1e90ff"
+        src="./fastify.svg"
+        alt="fastify"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </a>
 
     <div class="imgs">
       <a href="https://nodejs.org/en" target="_blank">
-        <img src="./nodejs.svg" alt="nodejs" />
+        <img
+          src="./nodejs.svg"
+          alt="nodejs"
+          class="has-shadow"
+          style="--col: #8ac74e"
+        />
       </a>
 
       <a href="https://vite.dev/" target="_blank">
-        <img src="./vite.svg" alt="vitejs" />
+        <img
+          src="./vite.svg"
+          alt="vitejs"
+          class="has-shadow"
+          style="--col: #fcc723"
+        />
       </a>
     </div>
 

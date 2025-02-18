@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/node.svg" type="image/x-icon" />
+    <link rel="icon" href="./node.svg" type="image/x-icon" />
     <title>NODE - VITE - FASTIFY</title>
     <style>
       * {
@@ -29,6 +29,7 @@
         gap: 30px;
         align-items: center;
         font-family: sans-serif;
+        font-weight: bolder;
         height: 100dvh;
         min-height: 300px;
         min-width: 250px;
@@ -40,6 +41,11 @@
       img {
         width: 100%;
         display: block;
+        transition: filter 500ms;
+
+        &.has-shadow:hover {
+          filter: drop-shadow(0 0 90px var(--col));
+        }
       }
 
       h2 {
@@ -63,14 +69,6 @@
         & > * {
           max-width: 150px;
           min-width: 100px;
-          transition: filter 500ms;
-
-          &:nth-child(1):hover {
-            filter: drop-shadow(0 0 90px #8ac74e);
-          }
-          &:nth-child(2):hover {
-            filter: drop-shadow(0 0 90px #fcc723);
-          }
         }
       }
 
@@ -96,21 +94,34 @@
     </style>
   </head>
   <body>
-    <img
-      class="fastify-img"
-      src="./fastify.svg"
-      alt="fastify"
-      loading="eager"
-      fetchpriority="high"
-    />
+    <a href="https://fastify.dev/" target="_blank">
+      <img
+        class="fastify-img has-shadow"
+        style="--col: #1e90ff"
+        src="./fastify.svg"
+        alt="fastify"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </a>
 
     <div class="imgs">
       <a href="https://nodejs.org/en" target="_blank">
-        <img src="/nodejs.svg" alt="nodejs" />
+        <img
+          src="./nodejs.svg"
+          alt="nodejs"
+          class="has-shadow"
+          style="--col: #8ac74e"
+        />
       </a>
 
       <a href="https://vite.dev/" target="_blank">
-        <img src="/vite.svg" alt="vitejs" />
+        <img
+          src="./vite.svg"
+          alt="vitejs"
+          class="has-shadow"
+          style="--col: #fcc723"
+        />
       </a>
     </div>
 
