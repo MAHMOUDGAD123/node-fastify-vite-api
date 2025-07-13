@@ -1,5 +1,5 @@
 {
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*", "./plugins/**/*"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     /* Language and Environment */
@@ -14,7 +14,7 @@
     "types": ["vite/client"],
 
     /* Modules */
-    "rootDir": "./src",
+    "rootDir": "./",
     "skipDefaultLibCheck": false,
     "sourceMap": true,
     "preserveWatchOutput": true,

@@ -1,6 +1,5 @@
 import type { Cache } from "cache-manager";
 import { PINO_CONFIG } from "./pino-config";
-import type { FastifyRequest } from "fastify";
 import fs from "fs";
 
 export const getPinoConfig = (mode: "development" | "production") => {
@@ -20,15 +19,10 @@ export const readLocalJsonFile = async (path: string) => {
 
 // Caching
 // =============================================================
-export const getCachedValue = async (
-  memCache: Cache,
-  cacheKey: string,
-  request: FastifyRequest
-) => {
+export const getCachedValue = async (memCache: Cache, cacheKey: string) => {
   const cachedValue = await memCache.get(cacheKey);
 
   if (cachedValue) {
-    request.log.info("\x1b[32m\x1b[1m[Served From Cache]");
     return cachedValue;
   }
   return null;
@@ -37,10 +31,8 @@ export const getCachedValue = async (
 export const saveToCache = async (
   memCache: Cache,
   cacheKey: string,
-  dataToSave: unknown,
-  request: FastifyRequest
+  dataToSave: unknown
 ) => {
   memCache.set(cacheKey, dataToSave);
-  request.log.info("\x1b[30m[Served From db]");
 };
 // =============================================================

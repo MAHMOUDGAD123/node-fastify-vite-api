@@ -21,7 +21,8 @@ import {
   CORS_OPTIONS,
   ENV_OPTIONS,
   SESSION_OPTIONS,
-} from "./utils/configuration";
+} from "@/utils/configuration";
+import { ytdlRoutes } from "@/routes/youtube-dl-exec";
 
 const MODE = import.meta.env.MODE as Globals.EnvironmentMode;
 
@@ -49,6 +50,7 @@ if (import.meta.env.DEV) {
 }
 
 app.register(usersRoutes, { prefix: "/api/users" });
+app.register(ytdlRoutes, { prefix: "/api/ytdl" });
 
 app.get("/", async (_req: FastifyRequest, _res: FastifyReply) => {
   return _res.view("index");
@@ -69,7 +71,7 @@ if (MODE === "production") {
   (async () => {
     app.listen(
       {
-        port: +process.env.PORT! || 3000,
+        port: process.env.PORT ? +process.env.PORT : 3000,
       },
       (err, address) => {
         if (err) {

@@ -7,7 +7,7 @@ import type {
 } from "fastify";
 
 export const loggerHooks = fp(async (app: FastifyInstance) => {
-  app.addHook("onRequest", async (_req: FastifyRequest, _res: FastifyReply) => {
+  app.addHook("onRequest", async () => {
     console.clear();
   });
 

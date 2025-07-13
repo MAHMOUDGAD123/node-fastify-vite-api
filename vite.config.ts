@@ -25,10 +25,15 @@ export default defineConfig({
   },
   preview: {
     port: 3000,
+    host: true,
   },
   server: {
     hmr: true,
     port: 3000,
+    host: true,
+    proxy: {
+      '*/api': 'http://localhost:3000',
+    }
   },
   plugins: [
     ...vitePluginNode(),

@@ -1,39 +1,57 @@
-import {
-  getCachedValue,
-  readLocalJsonFile,
-  saveToCache,
-  waitFor,
-} from "@/utils/tools";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-// validation
+import { getCachedValue, readLocalJsonFile, saveToCache } from "@/utils/tools";
 import z from "zod";
-// caching
-import { createCache } from "cache-manager";
-import { CACHE } from "@/utils/configuration";
-
-const memCache = createCache({
-  ttl: CACHE.TTL,
-  refreshThreshold: CACHE.refreshThreshold(),
-});
+import { memCache } from "@/utils/cache";
 
 export const usersRoutes = async (app: FastifyInstance) => {
-  app.get("/", async (_req: FastifyRequest, _res: FastifyReply) => {
-    const cacheKey = "users";
-    const cachedValue = (await getCachedValue(
-      memCache,
-      cacheKey,
-      _req
-    )) as Database.UserInfoType[];
-
+  // Cache middleware
+  const checkCacheHandler = async <T = unknown>({
+    cacheKey,
+    _req,
+  }: {
+    cacheKey: string;
+    _req: FastifyRequest;
+  }): Promise<{ done: boolean; cachedData?: T }> => {
+    const cachedValue = await getCachedValue(memCache, cacheKey);
     if (cachedValue) {
-      _res.status(200).send(cachedValue);
+      _req.log.info("\x1b[32m\x1b[1m[Served From Cache]");
+      return { done: true, cachedData: cachedValue as T };
+    }
+    return { done: false };
+  };
+
+  // After response, save to cache
+  const saveToCacheHandler = async ({
+    _req,
+    dataToSave,
+    cacheKey,
+  }: {
+    _req: FastifyRequest;
+    dataToSave: unknown;
+    cacheKey: string;
+  }) => {
+    await saveToCache(memCache, cacheKey, dataToSave);
+    _req.log.info("\x1b[30m[Served From db]");
+  };
+
+  app.get("/", async (_req: FastifyRequest, _res: FastifyReply) => {
+    const cacheKey = _req.url;
+    const { done, cachedData } = await checkCacheHandler({ cacheKey, _req });
+
+    if (done && cachedData) {
+      _res.status(200).send(cachedData);
       return;
     }
 
-    await waitFor(2000);
     const users = await readLocalJsonFile("public/db/users.json");
-    _res.send(users);
-    saveToCache(memCache, cacheKey, users, _req);
+
+    _res.status(200).send(users);
+
+    await saveToCacheHandler({
+      _req,
+      dataToSave: users,
+      cacheKey,
+    });
   });
 
   app.get("/:id", async (_req: FastifyRequest, _res: FastifyReply) => {
@@ -46,19 +64,16 @@ export const usersRoutes = async (app: FastifyInstance) => {
     if (!validationResult.success) {
       throw new Error(validationResult.error.issues[0]?.message);
     }
-    const cacheKey = `users/${id}`;
-    const cachedValue = (await getCachedValue(
-      memCache,
-      cacheKey,
-      _req
-    )) as Database.UserInfoType;
 
-    if (cachedValue) {
-      _res.status(200).send(cachedValue);
+    const cacheKey = `users/${id}`;
+    const { done, cachedData } = await checkCacheHandler<Database.UserInfoType>(
+      { cacheKey, _req }
+    );
+
+    if (done && cachedData) {
+      _res.status(200).send(cachedData);
       return;
     }
-
-    await waitFor(2000);
 
     const user = (
       (await readLocalJsonFile(
@@ -66,8 +81,13 @@ export const usersRoutes = async (app: FastifyInstance) => {
       )) as Database.UserInfoType[]
     ).find((user) => user.id === id);
 
-    _res.send(user);
-    saveToCache(memCache, cacheKey, user, _req);
+    _res.status(200).send(user);
+
+    await saveToCacheHandler({
+      _req,
+      dataToSave: user,
+      cacheKey,
+    });
   });
 
   app.get("/:id/posts", async (_req: FastifyRequest, _res: FastifyReply) => {
@@ -80,19 +100,16 @@ export const usersRoutes = async (app: FastifyInstance) => {
     if (!validationResult.success) {
       throw new Error(validationResult.error.issues[0]?.message);
     }
-    const cacheKey = `users/${id}/*`;
-    const cachedValue = (await getCachedValue(
-      memCache,
-      cacheKey,
-      _req
-    )) as Database.PostInfoType[];
 
-    if (cachedValue) {
-      _res.status(200).send(cachedValue);
+    const cacheKey = `users/${id}/*`;
+    const { done, cachedData } = await checkCacheHandler<
+      Database.PostInfoType[]
+    >({ cacheKey, _req });
+
+    if (done && cachedData) {
+      _res.status(200).send(cachedData);
       return;
     }
-
-    await waitFor(2000);
 
     const posts = (
       (await readLocalJsonFile(
@@ -100,8 +117,13 @@ export const usersRoutes = async (app: FastifyInstance) => {
       )) as Database.PostInfoType[]
     ).filter((post) => post.userId === id);
 
-    _res.send(posts);
-    saveToCache(memCache, cacheKey, posts, _req);
+    _res.status(200).send(posts);
+
+    await saveToCacheHandler({
+      _req,
+      dataToSave: posts,
+      cacheKey,
+    });
   });
 
   app.get(
@@ -128,18 +150,13 @@ export const usersRoutes = async (app: FastifyInstance) => {
         throw new Error(errMsg);
       }
       const cacheKey = `users/${userId}/${postId}`;
-      const cachedValue = (await getCachedValue(
-        memCache,
-        cacheKey,
-        _req
-      )) as Database.UserInfoType;
+      const { done, cachedData } =
+        await checkCacheHandler<Database.PostInfoType>({ cacheKey, _req });
 
-      if (cachedValue) {
-        _res.status(200).send(cachedValue);
+      if (done && cachedData) {
+        _res.status(200).send(cachedData);
         return;
       }
-
-      await waitFor(2000);
 
       const actualPostId = (userId - 1) * 10 + postId;
 
@@ -149,8 +166,13 @@ export const usersRoutes = async (app: FastifyInstance) => {
         )) as Database.PostInfoType[]
       ).find((post) => post.id === actualPostId);
 
-      _res.send(post);
-      saveToCache(memCache, cacheKey, post, _req);
+      _res.status(200).send(post);
+
+      await saveToCacheHandler({
+        _req,
+        dataToSave: post,
+        cacheKey,
+      });
     }
   );
 };
